@@ -4,11 +4,12 @@ export const TaskContext = createContext({
   // State stubs
   tasks: [],
   currentTask: null,
-  taskMembers: [],
   loading: false,
   error: null,
   users: [],
   usersLoading: false,
+  members: [],
+  membersLoading: false,
 
   // Action stubs
   getTasks: () => {},
@@ -16,7 +17,7 @@ export const TaskContext = createContext({
   createTask: (taskData) => {},
   updateTask: (taskId, taskData) => {},
   deleteTask: (taskId) => {},
-  addMember: (taskId, email) => {},
+  addMember: (taskId, userId) => {},
   getMembers: (taskId) => {},
   removeMember: (taskId, userId) => {},
   getUsers: () => {},

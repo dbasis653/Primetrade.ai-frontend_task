@@ -30,10 +30,19 @@ function Tasks() {
     getTasks();
   }, []);
 
-  const filteredTasks =
-    activeFilter === "all"
-      ? tasks
-      : tasks.filter((t) => t.status === activeFilter);
+  const filteredTasks = (() => {
+    if (isAdmin) {
+      return activeFilter === "all"
+        ? tasks
+        : tasks.filter((t) => t.status === activeFilter);
+    }
+    // Regular user: "All" = all tasks where they are a member
+    // Status tabs = tasks assigned to current user with that status
+    if (activeFilter === "all") return tasks;
+    return tasks.filter(
+      (t) => t.status === activeFilter && String(t.assignedTo) === String(user?._id),
+    );
+  })();
 
   const handleOpenCreate = () => {
     setEditingTask(null);

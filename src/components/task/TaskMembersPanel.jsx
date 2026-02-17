@@ -2,40 +2,34 @@ import { useState, useEffect } from "react";
 import { useTaskContext } from "../../contexts";
 
 function TaskMembersPanel({ taskId, isAdmin }) {
-  const { getMembers, addMember, removeMember, loading } = useTaskContext();
-  const [members, setMembers] = useState([]);
-  const [email, setEmail] = useState("");
+  const { getMembers, addMember, removeMember, members, membersLoading, users, getUsers } =
+    useTaskContext();
+  const [selectedUserId, setSelectedUserId] = useState("");
   const [addError, setAddError] = useState("");
-  const [fetchLoading, setFetchLoading] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
 
   useEffect(() => {
     if (!taskId) return;
-    fetchMembers();
+    getMembers(taskId);
+    if (isAdmin && users.length === 0) getUsers();
   }, [taskId]);
 
-  const fetchMembers = async () => {
-    setFetchLoading(true);
-    const result = await getMembers(taskId);
-    if (result?.success) {
-      setMembers(result.data || []);
-    }
-    setFetchLoading(false);
-  };
+  const memberUserIds = new Set(members.map((m) => m.user?._id));
+  const availableUsers = users.filter((u) => !memberUserIds.has(u._id));
 
   const handleAddMember = async (e) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setAddError("Email is required");
+    if (!selectedUserId) {
+      setAddError("Please select a user");
       return;
     }
     setAddError("");
     setAddLoading(true);
-    const result = await addMember(taskId, email.trim());
+    const result = await addMember(taskId, selectedUserId);
     setAddLoading(false);
     if (result?.success) {
-      setEmail("");
-      await fetchMembers();
+      setSelectedUserId("");
+      getMembers(taskId);
     } else {
       setAddError(result?.message || "Failed to add member");
     }
@@ -44,7 +38,7 @@ function TaskMembersPanel({ taskId, isAdmin }) {
   const handleRemoveMember = async (userId) => {
     const result = await removeMember(taskId, userId);
     if (result?.success) {
-      setMembers((prev) => prev.filter((m) => m.user?._id !== userId));
+      getMembers(taskId);
     }
   };
 
@@ -55,18 +49,23 @@ function TaskMembersPanel({ taskId, isAdmin }) {
       {/* Add member form — admin only */}
       {isAdmin && (
         <form onSubmit={handleAddMember} className="flex gap-2 mb-4">
-          <input
-            type="email"
-            value={email}
+          <select
+            value={selectedUserId}
             onChange={(e) => {
-              setEmail(e.target.value);
+              setSelectedUserId(e.target.value);
               setAddError("");
             }}
-            placeholder="member@email.com"
-            className={`flex-1 px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`flex-1 px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
               addError ? "border-red-400" : "border-gray-300"
             }`}
-          />
+          >
+            <option value="">— Select user —</option>
+            {availableUsers.map((u) => (
+              <option key={u._id} value={u._id}>
+                {u.username}
+              </option>
+            ))}
+          </select>
           <button
             type="submit"
             disabled={addLoading}
@@ -79,7 +78,7 @@ function TaskMembersPanel({ taskId, isAdmin }) {
       {addError && <p className="text-xs text-red-500 mb-3">{addError}</p>}
 
       {/* Members list */}
-      {fetchLoading ? (
+      {membersLoading ? (
         <div className="flex justify-center py-6">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
         </div>
@@ -87,11 +86,11 @@ function TaskMembersPanel({ taskId, isAdmin }) {
         <p className="text-sm text-gray-400 text-center py-4">No members yet.</p>
       ) : (
         <ul className="space-y-2">
-          {members.map((member) => {
+          {members.map((member, idx) => {
             const user = member.user || member;
             return (
               <li
-                key={member._id}
+                key={user._id || idx}
                 className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-gray-50"
               >
                 <div className="flex items-center gap-3">

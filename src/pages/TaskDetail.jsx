@@ -21,8 +21,14 @@ const STATUS_LABELS = {
 function TaskDetail() {
   const { taskId } = useParams();
   const navigate = useNavigate();
-  const { getTaskById, updateTask, currentTask, loading, error, clearTaskError } =
-    useTaskContext();
+  const {
+    getTaskById,
+    updateTask,
+    currentTask,
+    loading,
+    error,
+    clearTaskError,
+  } = useTaskContext();
   const { user } = useAuthContext();
 
   const isAdmin = user?.role === USER_ROLES.ADMIN;
@@ -122,7 +128,8 @@ function TaskDetail() {
                 </h1>
                 <span
                   className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full ${
-                    STATUS_STYLES[task.status] || STATUS_STYLES[TASK_STATUS.TODO]
+                    STATUS_STYLES[task.status] ||
+                    STATUS_STYLES[TASK_STATUS.TODO]
                   }`}
                 >
                   {STATUS_LABELS[task.status] || task.status}
@@ -147,7 +154,9 @@ function TaskDetail() {
                   {assignee ? (
                     <div className="flex items-center gap-2">
                       <img
-                        src={assignee.avatar?.url || "https://placehold.co/32x32"}
+                        src={
+                          assignee.avatar?.url || "https://placehold.co/32x32"
+                        }
                         alt={assignee.username}
                         className="w-6 h-6 rounded-full object-cover bg-gray-100"
                       />
